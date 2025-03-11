@@ -1,6 +1,6 @@
 # SNN - Value Stream y Production Lines
 
-Este proyecto contiene un módulo para manejar opciones de producción, permitiendo la gestión eficiente de líneas de producción y flujos de valor.
+Este proyecto contiene un módulo para manejar opciones de producción, permitiendo la gestión eficiente de líneas de producción, flujos de valor y metas de producción.
 
 ## Requisitos
 
@@ -11,7 +11,7 @@ Este proyecto contiene un módulo para manejar opciones de producción, permitie
 
 1. Clona este repositorio:
 ```bash
-git clone [URL_DEL_REPOSITORIO]
+git clone https://github.com/robertocalvo27/SNN-Value-Stream-y-Production-Lines.git
 cd SNN-Value-Stream-y-Production-Lines
 ```
 
@@ -50,6 +50,25 @@ yarn build
 - TypeScript
 - Vite
 - Tailwind CSS
+- Lucide React (iconos)
+
+## Funcionalidades principales
+
+### Gestión de Value Streams
+- Crear, editar, activar/desactivar Value Streams
+- Gestión de líneas de producción asociadas a cada Value Stream
+
+### Metas de Producción
+- Configuración de metas de eficiencia, volumen y horas por línea de producción
+- Filtrado por tipo de meta (eficiencia, volumen, horas)
+- Gestión de fechas de vigencia para cada meta
+
+### Módulos adicionales (en desarrollo)
+- Capacidad
+- Entrada de Datos
+- Run Rates
+- Paros Programados
+- Causas
 
 ## Estructura del proyecto
 
