@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlusCircle, Settings2, Power, Trash2, Factory, AlertCircle, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { PlusCircle, Settings2, Power, Trash2, Factory, AlertCircle, ChevronDown, ChevronUp, X, Users, Database, Activity, Clock, AlertTriangle, Settings } from 'lucide-react';
 
 interface ProductionLine {
   id: string;
@@ -336,6 +336,7 @@ function App() {
   const [valueStreamModalInitialData, setValueStreamModalInitialData] = useState<Omit<ValueStream, 'id' | 'productionLines'> | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState('valueStreams');
 
   const toggleSection = (streamId: string) => {
     setCollapsedSections(prev => {
@@ -584,120 +585,258 @@ function App() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6" aria-label="Tabs">
-              <button className="border-purple-500 text-purple-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                Value Streams
-              </button>
-            </nav>
-          </div>
-
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Value Streams</h2>
+        <div className="bg-white rounded-lg shadow mb-8">
+          <div className="flex flex-wrap items-center justify-between px-4 py-4 sm:px-6 border-b border-gray-200">
+            <div className="flex space-x-8 overflow-x-auto">
               <button 
-                onClick={handleAddValueStream}
-                className="text-purple-600 hover:text-purple-700 flex items-center gap-2"
+                onClick={() => setActiveTab('valueStreams')}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === 'valueStreams' 
+                    ? 'bg-purple-100 text-purple-700' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
               >
-                <PlusCircle className="w-5 h-5" />
-                Agregar Value Stream
+                <Factory className="w-5 h-5" />
+                <span>Value Streams</span>
               </button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {valueStreams.map(stream => (
-                <div key={stream.id} className={`bg-white border rounded-lg shadow-sm ${!stream.isActive && 'opacity-75'}`}>
-                  <div className="p-4 border-b">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{stream.name}</h3>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleEditValueStream(stream.id)}
-                          className="p-1 text-blue-600 hover:text-blue-700 rounded-full"
-                        >
-                          <Settings2 className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleValueStream(stream.id, stream.isActive)}
-                          className={`p-1 rounded-full ${
-                            stream.isActive ? 'text-green-600 hover:text-green-700' : 'text-gray-400 hover:text-gray-500'
-                          }`}
-                        >
-                          <Power className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-500">Código: {stream.code}</p>
-                  </div>
-
-                  <div className="p-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-medium text-gray-700">Líneas de Producción</h4>
-                        <button
-                          onClick={() => toggleSection(stream.id)}
-                          className="text-gray-500 hover:text-gray-700"
-                        >
-                          {collapsedSections.has(stream.id) ? (
-                            <ChevronDown className="w-4 h-4" />
-                          ) : (
-                            <ChevronUp className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                      <button
-                        onClick={() => handleAddProductionLine(stream.id)}
-                        className="text-purple-600 hover:text-purple-700"
-                      >
-                        <PlusCircle className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    {!collapsedSections.has(stream.id) && (
-                      <div className="space-y-3">
-                        {stream.productionLines.map(line => (
-                          <div key={line.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <Factory className={`w-4 h-4 ${line.isActive ? 'text-green-600' : 'text-gray-400'}`} />
-                                <span className="text-sm font-medium text-gray-700">{line.name}</span>
-                              </div>
-                              <p className="text-xs text-gray-500 ml-6">{line.description}</p>
-                              <p className="text-xs text-gray-500 ml-6">Código: {line.code}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleToggleProductionLine(stream.id, line.id, line.isActive)}
-                                className={`p-1 rounded-full ${
-                                  line.isActive ? 'text-green-600 hover:text-green-700' : 'text-gray-400 hover:text-gray-500'
-                                }`}
-                              >
-                                <Power className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleEditProductionLine(stream.id, line.id)}
-                                className="p-1 text-blue-600 hover:text-blue-700 rounded-full"
-                              >
-                                <Settings2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => removeProductionLine(stream.id, line.id)}
-                                className="p-1 text-red-600 hover:text-red-700 rounded-full"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+              
+              <button 
+                onClick={() => setActiveTab('capacidad')}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === 'capacidad' 
+                    ? 'bg-purple-100 text-purple-700' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <Users className="w-5 h-5" />
+                <span>Capacidad</span>
+              </button>
+              
+              <button 
+                onClick={() => setActiveTab('entradaDatos')}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === 'entradaDatos' 
+                    ? 'bg-purple-100 text-purple-700' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <Database className="w-5 h-5" />
+                <span>Entrada de Datos</span>
+              </button>
+              
+              <button 
+                onClick={() => setActiveTab('runRates')}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === 'runRates' 
+                    ? 'bg-purple-100 text-purple-700' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <Activity className="w-5 h-5" />
+                <span>Run Rates</span>
+              </button>
+              
+              <button 
+                onClick={() => setActiveTab('parosProgramados')}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === 'parosProgramados' 
+                    ? 'bg-purple-100 text-purple-700' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <Clock className="w-5 h-5" />
+                <span>Paros Programados</span>
+              </button>
+              
+              <button 
+                onClick={() => setActiveTab('causas')}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === 'causas' 
+                    ? 'bg-purple-100 text-purple-700' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <AlertTriangle className="w-5 h-5" />
+                <span>Causas</span>
+              </button>
+              
+              <button 
+                onClick={() => setActiveTab('otrosParametros')}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === 'otrosParametros' 
+                    ? 'bg-purple-100 text-purple-700' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <Settings className="w-5 h-5" />
+                <span>Otros Parámetros</span>
+              </button>
             </div>
           </div>
         </div>
+
+        {activeTab === 'valueStreams' && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Value Streams</h2>
+                <button 
+                  onClick={handleAddValueStream}
+                  className="text-purple-600 hover:text-purple-700 flex items-center gap-2"
+                >
+                  <PlusCircle className="w-5 h-5" />
+                  Agregar Value Stream
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {valueStreams.map(stream => (
+                  <div key={stream.id} className={`bg-white border rounded-lg shadow-sm ${!stream.isActive && 'opacity-75'}`}>
+                    <div className="p-4 border-b">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">{stream.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleEditValueStream(stream.id)}
+                            className="p-1 text-blue-600 hover:text-blue-700 rounded-full"
+                          >
+                            <Settings2 className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleToggleValueStream(stream.id, stream.isActive)}
+                            className={`p-1 rounded-full ${
+                              stream.isActive ? 'text-green-600 hover:text-green-700' : 'text-gray-400 hover:text-gray-500'
+                            }`}
+                          >
+                            <Power className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-500">Código: {stream.code}</p>
+                    </div>
+
+                    <div className="p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-medium text-gray-700">Líneas de Producción</h4>
+                          <button
+                            onClick={() => toggleSection(stream.id)}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            {collapsedSections.has(stream.id) ? (
+                              <ChevronDown className="w-4 h-4" />
+                            ) : (
+                              <ChevronUp className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => handleAddProductionLine(stream.id)}
+                          className="text-purple-600 hover:text-purple-700"
+                        >
+                          <PlusCircle className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      {!collapsedSections.has(stream.id) && (
+                        <div className="space-y-3">
+                          {stream.productionLines.map(line => (
+                            <div key={line.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <Factory className={`w-4 h-4 ${line.isActive ? 'text-green-600' : 'text-gray-400'}`} />
+                                  <span className="text-sm font-medium text-gray-700">{line.name}</span>
+                                </div>
+                                <p className="text-xs text-gray-500 ml-6">{line.description}</p>
+                                <p className="text-xs text-gray-500 ml-6">Código: {line.code}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleToggleProductionLine(stream.id, line.id, line.isActive)}
+                                  className={`p-1 rounded-full ${
+                                    line.isActive ? 'text-green-600 hover:text-green-700' : 'text-gray-400 hover:text-gray-500'
+                                  }`}
+                                >
+                                  <Power className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleEditProductionLine(stream.id, line.id)}
+                                  className="p-1 text-blue-600 hover:text-blue-700 rounded-full"
+                                >
+                                  <Settings2 className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => removeProductionLine(stream.id, line.id)}
+                                  className="p-1 text-red-600 hover:text-red-700 rounded-full"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'capacidad' && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Capacidad</h2>
+            <div className="text-center py-12 text-gray-500">
+              <p>Contenido de Capacidad en desarrollo</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'entradaDatos' && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Entrada de Datos</h2>
+            <div className="text-center py-12 text-gray-500">
+              <p>Contenido de Entrada de Datos en desarrollo</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'runRates' && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Run Rates</h2>
+            <div className="text-center py-12 text-gray-500">
+              <p>Contenido de Run Rates en desarrollo</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'parosProgramados' && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Paros Programados</h2>
+            <div className="text-center py-12 text-gray-500">
+              <p>Contenido de Paros Programados en desarrollo</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'causas' && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Causas</h2>
+            <div className="text-center py-12 text-gray-500">
+              <p>Contenido de Causas en desarrollo</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'otrosParametros' && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Otros Parámetros</h2>
+            <div className="text-center py-12 text-gray-500">
+              <p>Contenido de Otros Parámetros en desarrollo</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <Modal
