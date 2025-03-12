@@ -620,6 +620,15 @@ function App() {
   const [currentGoalId, setCurrentGoalId] = useState<string | null>(null);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [goalModalInitialData, setGoalModalInitialData] = useState<Omit<ProductionGoal, 'id'> | undefined>(undefined);
+  
+  // Filtros para metas de producción
+  const [filters, setFilters] = useState({
+    valueStream: '',
+    productionLine: '',
+    status: 'all', // 'all', 'active', 'inactive'
+    searchTerm: ''
+  });
+  const [showFilters, setShowFilters] = useState(false);
 
   const toggleSection = (streamId: string) => {
     setCollapsedSections(prev => {
@@ -914,6 +923,61 @@ function App() {
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  // Función para filtrar las metas de producción
+  const getFilteredGoals = () => {
+    return productionGoals.filter(goal => {
+      // Filtrar por Value Stream
+      if (filters.valueStream && goal.streamId !== filters.valueStream) {
+        return false;
+      }
+      
+      // Filtrar por Línea de Producción
+      if (filters.productionLine && goal.lineId !== filters.productionLine) {
+        return false;
+      }
+      
+      // Filtrar por estado
+      if (filters.status === 'active' && !goal.isActive) {
+        return false;
+      }
+      if (filters.status === 'inactive' && goal.isActive) {
+        return false;
+      }
+      
+      // Filtrar por término de búsqueda
+      if (filters.searchTerm) {
+        const streamName = getStreamNameById(goal.streamId).toLowerCase();
+        const lineName = getLineNameById(goal.streamId, goal.lineId).toLowerCase();
+        const searchTerm = filters.searchTerm.toLowerCase();
+        
+        return streamName.includes(searchTerm) || 
+               lineName.includes(searchTerm) || 
+               goal.efficiencyGoal.toString().includes(searchTerm) ||
+               (goal.volumeGoal && goal.volumeGoal.toString().includes(searchTerm)) ||
+               (goal.workHoursGoal && goal.workHoursGoal.toString().includes(searchTerm)) ||
+               (goal.paidHoursGoal && goal.paidHoursGoal.toString().includes(searchTerm));
+      }
+      
+      return true;
+    });
+  };
+
+  // Obtener líneas de producción para un Value Stream específico
+  const getProductionLinesForStream = (streamId: string) => {
+    const stream = valueStreams.find(s => s.id === streamId);
+    return stream ? stream.productionLines : [];
+  };
+
+  // Resetear filtros
+  const resetFilters = () => {
+    setFilters({
+      valueStream: '',
+      productionLine: '',
+      status: 'all',
+      searchTerm: ''
+    });
   };
 
   return (
@@ -1227,6 +1291,15 @@ function App() {
                   </button>
                 </div>
                 <button 
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="text-gray-600 hover:text-gray-900 flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-md"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  <span>Filtros</span>
+                </button>
+                <button 
                   onClick={handleAddProductionGoal}
                   className="text-purple-600 hover:text-purple-700 flex items-center gap-2"
                 >
@@ -1235,6 +1308,96 @@ function App() {
                 </button>
               </div>
             </div>
+
+            {showFilters && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Value Stream
+                    </label>
+                    <select
+                      value={filters.valueStream}
+                      onChange={(e) => {
+                        const newStreamId = e.target.value;
+                        setFilters({
+                          ...filters,
+                          valueStream: newStreamId,
+                          productionLine: '' // Reset production line when changing stream
+                        });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    >
+                      <option value="">Todos</option>
+                      {valueStreams.map(stream => (
+                        <option key={stream.id} value={stream.id}>{stream.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Línea de Producción
+                    </label>
+                    <select
+                      value={filters.productionLine}
+                      onChange={(e) => setFilters({...filters, productionLine: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      disabled={!filters.valueStream}
+                    >
+                      <option value="">Todas</option>
+                      {filters.valueStream && getProductionLinesForStream(filters.valueStream).map(line => (
+                        <option key={line.id} value={line.id}>{line.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Estado
+                    </label>
+                    <select
+                      value={filters.status}
+                      onChange={(e) => setFilters({...filters, status: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    >
+                      <option value="all">Todos</option>
+                      <option value="active">Activos</option>
+                      <option value="inactive">Inactivos</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Buscar
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={filters.searchTerm}
+                        onChange={(e) => setFilters({...filters, searchTerm: e.target.value})}
+                        placeholder="Buscar..."
+                        className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      />
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end mt-4">
+                  <button
+                    onClick={resetFilters}
+                    className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
+                  >
+                    Limpiar filtros
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -1278,7 +1441,7 @@ function App() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {productionGoals.map(goal => (
+                  {getFilteredGoals().map(goal => (
                     <tr key={goal.id} className={!goal.isActive ? 'bg-gray-50' : ''}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {getStreamNameById(goal.streamId)}
@@ -1339,16 +1502,24 @@ function App() {
                       </td>
                     </tr>
                   ))}
-                  {productionGoals.length === 0 && (
+                  {getFilteredGoals().length === 0 && (
                     <tr>
                       <td colSpan={selectedGoalType === 'hours' ? 7 : 6} className="px-6 py-4 text-center text-sm text-gray-500">
-                        No hay metas de producción definidas
+                        {filters.valueStream || filters.productionLine || filters.status !== 'all' || filters.searchTerm
+                          ? 'No se encontraron metas con los filtros aplicados'
+                          : 'No hay metas de producción definidas'}
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
+            
+            {getFilteredGoals().length > 0 && (
+              <div className="mt-4 text-sm text-gray-500 text-right">
+                Mostrando {getFilteredGoals().length} de {productionGoals.length} metas
+              </div>
+            )}
           </div>
         )}
       </div>
